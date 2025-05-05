@@ -1,7 +1,6 @@
 from flask import Blueprint, request, jsonify
 from api.services.user_service import UserService
 from api.services.product_service import ProductService
-from api.services.product_service_by_id import ProductServiceById
 from api.services.email_service import enviar_correo_bienvenida
 
 def register_routes(app, mysql):
@@ -9,7 +8,6 @@ def register_routes(app, mysql):
 
     user_service = UserService(mysql)
     product_service = ProductService(mysql)
-    #product_service_by_id = ProductServiceById(mysql)
 
     @api_bp.route('/users', methods=['GET'])
     def get_users():
@@ -38,6 +36,12 @@ def register_routes(app, mysql):
             return jsonify({"message": "Faltan campos obligatorios"}), 400
 
         result, status_code = user_service.register_user(name, email)
+        # Intentar enviar correo de bienvenida (no bloquea el registro si falla)
+        try:
+            enviar_correo_bienvenida(email, name)
+        except Exception as e:
+            print(f"Error al enviar correo: {e}")
+        
         return jsonify(result), status_code
 
     @api_bp.route('/login', methods=['POST'])
@@ -47,9 +51,12 @@ def register_routes(app, mysql):
         if not email:
             return jsonify({"message": "Falta el email"}), 400
 
-        result, status_code = user_service.login_user(email)
-        return jsonify(result), status_code
-
-
+        user, status_code = user_service.login_user(email)
+        if status_code == 200:
+            # Si el login es exitoso, añadimos información del descuento al usuario
+            user['descuento'] = 10  # Descuento fijo del 10% 
+            return jsonify(user), status_code
+        else:
+            return jsonify({"success": False, "message": "Usuario no encontrado"}), status_code
 
     app.register_blueprint(api_bp)
