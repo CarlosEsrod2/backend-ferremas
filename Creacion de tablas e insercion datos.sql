@@ -53,11 +53,3 @@ INSERT INTO ferremas.product (name, price, type) VALUES
 ('Nivel de Burbuja 40cm', 6990, 6),
 ('Medidor Láser de Distancia 40m', 24990, 6),
 ('Escuadra Metálica 30cm', 3990, 6);
-
-
-
-
-
-
-
-
