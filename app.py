@@ -12,7 +12,10 @@ CORS(app)
 app.config['MYSQL_HOST'] = 'localhost'
 app.config['MYSQL_USER'] = 'root'
 app.config['MYSQL_PASSWORD'] = '' 
-app.config['MYSQL_DB'] = 'ferremas' #añadir el nombre de la base de datos
+app.config['MYSQL_DB'] = 'ferremas' # añadir el nombre de la base de datos
+
+# URL del frontend para redirecciones
+app.config['FRONTEND_URL'] = 'http://localhost:3000'
 
 # Inicializar MySQL
 mysql = init_db(app)

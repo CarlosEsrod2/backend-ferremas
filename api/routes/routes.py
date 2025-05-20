@@ -1,13 +1,17 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, url_for, redirect
 from api.services.user_service import UserService
 from api.services.product_service import ProductService
 from api.services.email_service import enviar_correo_bienvenida
+from api.services.transbank_service import TransbankService
+import uuid
+import datetime
 
 def register_routes(app, mysql):
     api_bp = Blueprint('api', __name__)
 
     user_service = UserService(mysql)
     product_service = ProductService(mysql)
+    transbank_service = TransbankService()
 
     @api_bp.route('/users', methods=['GET'])
     def get_users():
@@ -65,5 +69,49 @@ def register_routes(app, mysql):
             return jsonify(user), status_code
         else:
             return jsonify({"success": False, "message": "Usuario no encontrado o contraseña incorrecta"}), status_code
+    
+    
+
+    #######################################################
+    ################# Transbank Routes ####################
+    #######################################################
+    @api_bp.route('/create-transaction', methods=['POST']) #ERROR POST http://localhost:5000/create-transaction 500 (INTERNAL SERVER ERROR)
+    def create_transaction():
+        data = request.get_json()
+        
+        if not data or 'amount' not in data:
+            return jsonify({"message": "Falta el monto de la transacción"}), 400
+        
+        amount = int(data['amount'])
+        buy_order = f"BO-{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}-{uuid.uuid4().hex[:8]}"
+        session_id = data.get('sessionId', str(uuid.uuid4()))
+        
+        # URL a la que Webpay redirigirá después de la transacción
+        return_url = request.url_root.rstrip('/') + url_for('api.transaction_commit')
+        
+        response = transbank_service.create_transaction(buy_order, session_id, amount, return_url)
+        
+        if response['success']:
+            return jsonify(response), 200
+        else:
+            return jsonify(response), 500
+    
+    @api_bp.route('/transaction-commit', methods=['GET'])
+    def transaction_commit():
+        token_ws = request.args.get('token_ws')
+        
+        if not token_ws:
+            return jsonify({"message": "Token no recibido"}), 400
+        
+        response = transbank_service.commit_transaction(token_ws)
+        
+        # Crear una URL para redireccionar al frontend con los resultados
+        if response['success']:
+            redirect_url = f"{app.config.get('FRONTEND_URL', 'http://localhost:3000')}/payment-result?status=success&order={response['buy_order']}"
+        else:
+            redirect_url = f"{app.config.get('FRONTEND_URL', 'http://localhost:3000')}/payment-result?status=error"
+        
+        # Redirección al frontend con los resultados
+        return redirect(redirect_url)
         
     app.register_blueprint(api_bp)
