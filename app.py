@@ -6,7 +6,7 @@ from api.db.database import init_db
 app = Flask(__name__)
 
 # Habilitar CORS (permite peticiones desde React)
-CORS(app)
+CORS(app, origins=["http://localhost:3000"])
 
 # Configuración MySQL
 app.config['MYSQL_HOST'] = 'localhost'
