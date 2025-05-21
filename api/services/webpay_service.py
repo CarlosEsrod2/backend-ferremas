@@ -9,9 +9,11 @@ class WebpayService:
         transaction = WebpayApi.get_transaction()
         response = transaction.create(buy_order, session_id, amount, return_url)
         #return response['url'] + "?token_ws=" + response['token']
-        return jsonify({
-            "url": response['url'] + "?token_ws=" + response['token']
-        })
+        return {
+            "success": True,
+            "url": response['url'] + "?token_ws=" + response['token'],
+            "token": response['token']
+        }
     
     def confirmar_pago(self, token):
         transaction = WebpayApi.get_transaction()

@@ -79,14 +79,32 @@ def register_routes(app, mysql):
     @api_bp.route('/crear-transaccion', methods=['GET','POST'])
     def crear_transaccion():
         data = request.get_json()
-        url = webpay_service.iniciar_pago(data['amount'])
-        return redirect(url)
+        amount = data.get('amount', 0)
+        try:
+            # Iniciar transacción con WebPay
+            response = webpay_service.iniciar_pago(amount)
+            return jsonify(response)
+        except Exception as e:
+            app.logger.error(f"Error al crear transacción: {str(e)}")
+            return jsonify({"success": False, "error": str(e)}), 500
         
-    
-    @api_bp.route('/confirmar_pago', methods=['POST'])
+        #url = webpay_service.iniciar_pago(data['amount'])
+        #return redirect(url)
+
+    @api_bp.route('/confirmar_pago', methods=['GET', 'POST'])
     def confirmar_pago():
-        token = request.form.get("token_ws")
-        response = webpay_service.confirmar_pago(token)
-        return jsonify({"estado" : "Pago exitoso", "detalle" : response})
+        token = request.form.get("token_ws") or request.args.get("token_ws")
+        
+        if not token:
+            return jsonify({"success": False, "message": "Token no proporcionado"}), 400
+        
+        try:
+            response = webpay_service.confirmar_pago(token)
+            # Procesar respuesta exitosa
+            return redirect(f"{app.config['FRONTEND_URL']}/payment-result?status=success&order={response.get('buy_order', 'unknown')}")
+        except Exception as e:
+            app.logger.error(f"Error al confirmar pago: {str(e)}")
+            # Redireccionar a página de error de pago
+            return redirect(f"{app.config['FRONTEND_URL']}/payment-result?status=error&message={str(e)}")
         
     app.register_blueprint(api_bp)
