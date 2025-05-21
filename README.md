@@ -25,7 +25,8 @@ El proyecto sigue los principios de Arquitectura Limpia con una clara separació
 ├── api/
 │   ├── db/
 │   │   ├── database.py         # Conexión a MySQL
-│   │   └── external_api.py     # Cliente para API externa (mindicador.cl)
+│   │   ├── external_api.py     # Cliente para API externa (mindicador.cl)
+│   │   └── webpay_api.py       # Cliente para integración con Transbank
 │   ├── models/
 │   │   ├── dollar.py           # Entidad de conversión a dólar
 │   │   ├── product.py          # Entidad de productos
@@ -36,7 +37,7 @@ El proyecto sigue los principios de Arquitectura Limpia con una clara separació
 │   │   ├── dollar_service.py   # Servicio para obtener valor del dólar
 │   │   ├── email_service.py    # Servicio para envío de emails
 │   │   ├── product_service.py  # Lógica de productos
-│   │   ├── transbank_service.py # Integración con Transbank
+│   │   ├── webpay_service.py   # Integración con Transbank WebpayPlus
 │   │   └── user_service.py     # Lógica de usuarios
 │   └── utils/
 │       └── helpers.py          # Funciones auxiliares
